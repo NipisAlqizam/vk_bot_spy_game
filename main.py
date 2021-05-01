@@ -6,7 +6,7 @@ from vkbottle.bot import Bot, MessageMin
 
 import locations
 from strings import GAME_STOPPED, NO_CURRENT_GAME, RECRUITMENT_STARTED, GAME_STARTED, GAME_ALREADY_STARTED, \
-    ERROR_NO_RIGHTS, ALREADY_PLAYING, ERROR_MESSAGES_FORBIDDEN, ALREADY_ALL_PLAYERS
+    ERROR_NO_RIGHTS, ALREADY_PLAYING, ERROR_MESSAGES_FORBIDDEN, ALREADY_ALL_PLAYERS, HELP_MESSAGE
 
 admin_ids = [203760080, 357855054, 513143028, 526421484]  # я, Лиза, Лёня, Антон
 players_list = []  # TODO: позволить игру из разных бесед
@@ -78,6 +78,11 @@ async def stop_handler(message: MessageMin):
         all_players = False
         return GAME_STOPPED
     return NO_CURRENT_GAME
+
+
+@bot.on.message(func=lambda m: "шпионкоманды" == m.text.lower())
+async def help_handler(message: MessageMin):
+    return HELP_MESSAGE
 
 
 async def assign_roles():
