@@ -1,1 +1,2 @@
 vkbottle >=3.0
+loguru
