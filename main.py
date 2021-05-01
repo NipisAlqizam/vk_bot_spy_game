@@ -17,6 +17,8 @@ admin_ids = [203760080, 357855054, 513143028, 526421484]  # я, Лиза, Лён
 players_list = []  # TODO: позволить игру из разных бесед
 current_game = False
 all_players = False
+spy = 0
+current_location = ''
 
 bot = Bot(os.environ["token"])
 
@@ -26,10 +28,12 @@ async def send_pm(to_id: int, message: str):
     await bot.api.messages.send(to_id, random_id=random.randint(1, 2 ** 63), message=message)
 
 
-async def get_username(user_id: int) -> str:
-    users_info = await bot.api.users.get(user_id)
+async def get_user_ping(user_id: int) -> str:
+    users_info = await bot.api.users.get(user_id, fields=['screen_name'])
     user_info = users_info[0]
-    return f"{user_info.first_name} {user_info.last_name}"
+    user_nickname = user_info.screen_name
+    logger.debug(f'User nickname is {user_nickname}')
+    return f"@{user_nickname} ({user_info.first_name} {user_info.last_name})"
 
 
 @bot.on.chat_message(func=lambda m: "шпионвойти" == m.text.lower())
@@ -43,7 +47,7 @@ async def join_handler(message: MessageMin):
         return ALREADY_PLAYING
     if current_game:
         players_list.append(message.from_id)
-        username = await get_username(message.from_id)
+        username = await get_user_ping(message.from_id)
         forward = json.dumps({
             "conversation_message_ids": [message.conversation_message_id],
             "peer_id": message.peer_id,
@@ -81,10 +85,15 @@ async def stop_handler(message: MessageMin):
     global current_game
     global all_players
     if current_game:
+        global spy, current_location
         players_list.clear()
         current_game = False
         all_players = False
-        return GAME_STOPPED
+        spy_ping = await get_user_ping(spy)
+        result_string = f"{GAME_STOPPED}\nШпионом был(а) {spy_ping}\nЛокацией была {current_location}"
+        spy = 0
+        current_location = ''
+        return result_string
     return NO_CURRENT_GAME
 
 
@@ -116,14 +125,15 @@ async def location_update_handler(message: MessageMin, match):
 
 
 async def assign_roles():
-    location = locations.choose_location()
+    global spy, current_location
+    current_location = locations.choose_location()
     spy = random.choice(players_list)
     for player in players_list:
-        print(player, location, spy)
+        print(player, current_location, spy)
         if player == spy:
             await send_pm(player, "Шпион")
         else:
-            await send_pm(player, location)
+            await send_pm(player, current_location)
 
 
 async def check_pm(user_id: int) -> bool:
