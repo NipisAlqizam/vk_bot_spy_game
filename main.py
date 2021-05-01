@@ -101,17 +101,18 @@ async def location_handler(message: MessageMin, match):
             return ERROR_NO_RIGHTS
         logger.debug(f'Происходит добавление локации {match[0]}')
         locations.add_location(match[0])
-    return '\n'.join(locations.locations)
+    return 'Текущие локации:\n' + '\n'.join(locations.locations)
 
 
-@bot.on.chat_message(regexp=r"(?i)^шпионобновить[ \n]((?:.+\n?)+)")
+@bot.on.chat_message(regexp=r"(?i)^шпионобновить[ \n]*((?:.+\n?)+)")
 async def location_update_handler(message: MessageMin, match):
     logger.debug('Попытка обновления локаций')
     if message.from_id not in admin_ids:
         return ERROR_NO_RIGHTS
+    await message.answer('Текущие локации:\n' + "\n".join(locations.locations))
     new_locations = match[0].splitlines()
     locations.update_location_list(new_locations)
-    return LOCATIONS_UPDATED
+    return LOCATIONS_UPDATED + "\n".join(locations.locations)
 
 
 async def assign_roles():

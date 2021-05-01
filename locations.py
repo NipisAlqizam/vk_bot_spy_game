@@ -18,6 +18,7 @@ def read_locations() -> list[str]:
 
 
 def update_location_list(new_locations: list):
+    global locations
     locations = new_locations
     with open(_locations_filename, 'w') as f:
         print('\n'.join(new_locations), file=f)
