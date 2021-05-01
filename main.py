@@ -8,7 +8,8 @@ from vkbottle.bot import Bot, MessageMin
 
 import locations
 from strings import GAME_STOPPED, NO_CURRENT_GAME, RECRUITMENT_STARTED, GAME_STARTED, GAME_ALREADY_STARTED, \
-    ERROR_NO_RIGHTS, ALREADY_PLAYING, ERROR_MESSAGES_FORBIDDEN, ALREADY_ALL_PLAYERS, HELP_MESSAGE
+    ERROR_NO_RIGHTS, ALREADY_PLAYING, ERROR_MESSAGES_FORBIDDEN, ALREADY_ALL_PLAYERS, HELP_MESSAGE, \
+    LOCATIONS_UPDATED
 
 locations_command_regexp = re.compile(r"^шпионлокации(?: ([\w ]+))?", re.IGNORECASE)
 
@@ -92,13 +93,25 @@ async def help_handler(message: MessageMin):
     return HELP_MESSAGE
 
 
-@bot.on.message(regexp=locations_command_regexp)
+@bot.on.chat_message(regexp=locations_command_regexp)
 async def location_handler(message: MessageMin, match):
     logger.debug('Получена комманда на локации')
     if match[0] is not None:
+        if message.from_id not in admin_ids:
+            return ERROR_NO_RIGHTS
         logger.debug(f'Происходит добавление локации {match[0]}')
         locations.add_location(match[0])
     return '\n'.join(locations.locations)
+
+
+@bot.on.chat_message(regexp=r"(?i)^шпионобновить[ \n]((?:.+\n?)+)")
+async def location_update_handler(message: MessageMin, match):
+    logger.debug('Попытка обновления локаций')
+    if message.from_id not in admin_ids:
+        return ERROR_NO_RIGHTS
+    new_locations = match[0].splitlines()
+    locations.update_location_list(new_locations)
+    return LOCATIONS_UPDATED
 
 
 async def assign_roles():
