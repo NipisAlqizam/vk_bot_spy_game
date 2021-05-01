@@ -9,7 +9,7 @@ from vkbottle.bot import Bot, MessageMin
 import locations
 from strings import GAME_STOPPED, NO_CURRENT_GAME, RECRUITMENT_STARTED, GAME_STARTED, GAME_ALREADY_STARTED, \
     ERROR_NO_RIGHTS, ALREADY_PLAYING, ERROR_MESSAGES_FORBIDDEN, ALREADY_ALL_PLAYERS, HELP_MESSAGE, \
-    LOCATIONS_UPDATED
+    LOCATIONS_UPDATED, NOT_ENOUGH_PLAYERS
 
 locations_command_regexp = re.compile(r"^шпионлокации(?: ([\w ]+))?", re.IGNORECASE)
 
@@ -69,6 +69,8 @@ async def start_handler(message: MessageMin):
     if current_game and all_players:
         return GAME_ALREADY_STARTED
     if current_game:
+        if len(players_list) < 3:
+            return NOT_ENOUGH_PLAYERS
         all_players = True
         await assign_roles()
         return GAME_STARTED
@@ -86,9 +88,12 @@ async def stop_handler(message: MessageMin):
     global all_players
     if current_game:
         global spy, current_location
+        no_spy = spy == 0
         players_list.clear()
         current_game = False
         all_players = False
+        if no_spy:
+            return GAME_STOPPED
         spy_ping = await get_user_ping(spy)
         result_string = f"{GAME_STOPPED}\nШпионом был(а) {spy_ping}\nЛокацией была {current_location}"
         spy = 0
