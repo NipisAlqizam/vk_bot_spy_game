@@ -27,7 +27,7 @@ async def get_username(user_id: int) -> str:
     return f"{user_info.first_name} {user_info.last_name}"
 
 
-@bot.on.chat_message(func=lambda m: "шпионвойти" in m.text.lower())
+@bot.on.chat_message(func=lambda m: "шпионвойти" == m.text.lower())
 async def join_handler(message: MessageMin):
     if current_game and all_players:
         return ALREADY_ALL_PLAYERS
@@ -47,7 +47,7 @@ async def join_handler(message: MessageMin):
     return NO_CURRENT_GAME
 
 
-@bot.on.chat_message(func=lambda m: "шпионстарт" in m.text.lower())
+@bot.on.chat_message(func=lambda m: "шпионстарт" == m.text.lower())
 async def start_handler(message: MessageMin):
     if message.from_id not in admin_ids:
         return ERROR_NO_RIGHTS
@@ -66,7 +66,7 @@ async def start_handler(message: MessageMin):
     return RECRUITMENT_STARTED
 
 
-@bot.on.chat_message(func=lambda m: "шпионстоп" in m.text.lower())
+@bot.on.chat_message(func=lambda m: "шпионстоп" == m.text.lower())
 async def stop_handler(message: MessageMin):
     if message.from_id not in admin_ids:
         return ERROR_NO_RIGHTS
