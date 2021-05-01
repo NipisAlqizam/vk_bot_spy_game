@@ -5,6 +5,8 @@ import random
 from vkbottle.bot import Bot, MessageMin
 
 import locations
+from strings import GAME_STOPPED, NO_CURRENT_GAME, RECRUITMENT_STARTED, GAME_STARTED, GAME_ALREADY_STARTED, \
+    ERROR_NO_RIGHTS, ALREADY_PLAYING, ERROR_MESSAGES_FORBIDDEN, ALREADY_ALL_PLAYERS
 
 admin_ids = [203760080, 357855054, 513143028, 526421484]  # я, Лиза, Лёня, Антон
 players_list = []  # TODO: позволить игру из разных бесед
@@ -28,11 +30,11 @@ async def get_username(user_id: int) -> str:
 @bot.on.chat_message(func=lambda m: "шпионвойти" in m.text.lower())
 async def join_handler(message: MessageMin):
     if current_game and all_players:
-        return "А всё, всех набрали"
+        return ALREADY_ALL_PLAYERS
     if not await check_pm(message.from_id):
-        return "Вы запретили боту писать вам в лс. Напишите что-нибудь ему или разблокируйте"
+        return ERROR_MESSAGES_FORBIDDEN
     if message.from_id in players_list:
-        return "Ты уже играешь"
+        return ALREADY_PLAYING
     if current_game:
         players_list.append(message.from_id)
         username = await get_username(message.from_id)
@@ -42,40 +44,40 @@ async def join_handler(message: MessageMin):
             "is_reply": True})
         await message.answer(f"{username}, тебя добавили", forward=forward)
         return
-    return "Игру ещё не начали"
+    return NO_CURRENT_GAME
 
 
 @bot.on.chat_message(func=lambda m: "шпионстарт" in m.text.lower())
 async def start_handler(message: MessageMin):
     if message.from_id not in admin_ids:
-        return "Вы должны быть избраны создателем для этого действия :)"
+        return ERROR_NO_RIGHTS
     if not await check_pm(message.from_id):
-        return "Вы запретили боту писать вам в лс. Напишите что-нибудь ему или разблокируйте"
+        return ERROR_MESSAGES_FORBIDDEN
     global current_game
     global all_players
     if current_game and all_players:
-        return "Игра уже идёт"
+        return GAME_ALREADY_STARTED
     if current_game:
         all_players = True
         await assign_roles()
-        return "Игра начата"
+        return GAME_STARTED
     current_game = True
     players_list.append(message.from_id)
-    return "Начат набор в игру"
+    return RECRUITMENT_STARTED
 
 
 @bot.on.chat_message(func=lambda m: "шпионстоп" in m.text.lower())
 async def stop_handler(message: MessageMin):
     if message.from_id not in admin_ids:
-        return "Вы должны быть избраны создателем для этого действия :)"
+        return ERROR_NO_RIGHTS
     global current_game
     global all_players
     if current_game:
         players_list.clear()
         current_game = False
         all_players = False
-        return "Игра остановлена"
-    return "Игра ещё не идёт"
+        return GAME_STOPPED
+    return NO_CURRENT_GAME
 
 
 async def assign_roles():
