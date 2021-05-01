@@ -1,12 +1,16 @@
 import json
 import os
 import random
+import re
 
+from loguru import logger
 from vkbottle.bot import Bot, MessageMin
 
 import locations
 from strings import GAME_STOPPED, NO_CURRENT_GAME, RECRUITMENT_STARTED, GAME_STARTED, GAME_ALREADY_STARTED, \
     ERROR_NO_RIGHTS, ALREADY_PLAYING, ERROR_MESSAGES_FORBIDDEN, ALREADY_ALL_PLAYERS, HELP_MESSAGE
+
+locations_command_regexp = re.compile(r"^шпионлокации(?: ([\w ]+))?", re.IGNORECASE)
 
 admin_ids = [203760080, 357855054, 513143028, 526421484]  # я, Лиза, Лёня, Антон
 players_list = []  # TODO: позволить игру из разных бесед
@@ -29,6 +33,7 @@ async def get_username(user_id: int) -> str:
 
 @bot.on.chat_message(func=lambda m: "шпионвойти" == m.text.lower())
 async def join_handler(message: MessageMin):
+    logger.debug(f'Происходит попытка входа в игру игрока {message.from_id}')
     if current_game and all_players:
         return ALREADY_ALL_PLAYERS
     if not await check_pm(message.from_id):
@@ -49,6 +54,7 @@ async def join_handler(message: MessageMin):
 
 @bot.on.chat_message(func=lambda m: "шпионстарт" == m.text.lower())
 async def start_handler(message: MessageMin):
+    logger.debug('Происходит попытка запуска игры')
     if message.from_id not in admin_ids:
         return ERROR_NO_RIGHTS
     if not await check_pm(message.from_id):
@@ -68,6 +74,7 @@ async def start_handler(message: MessageMin):
 
 @bot.on.chat_message(func=lambda m: "шпионстоп" == m.text.lower())
 async def stop_handler(message: MessageMin):
+    logger.debug('Происходит попытка остановки игры')
     if message.from_id not in admin_ids:
         return ERROR_NO_RIGHTS
     global current_game
@@ -83,6 +90,15 @@ async def stop_handler(message: MessageMin):
 @bot.on.message(func=lambda m: "шпионкоманды" == m.text.lower())
 async def help_handler(message: MessageMin):
     return HELP_MESSAGE
+
+
+@bot.on.message(regexp=locations_command_regexp)
+async def location_handler(message: MessageMin, match):
+    logger.debug('Получена комманда на локации')
+    if match[0] is not None:
+        logger.debug(f'Происходит добавление локации {match[0]}')
+        locations.add_location(match[0])
+    return '\n'.join(locations.locations)
 
 
 async def assign_roles():
