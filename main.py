@@ -13,7 +13,7 @@ from strings import GAME_STOPPED, NO_CURRENT_GAME, RECRUITMENT_STARTED, GAME_STA
 
 locations_command_regexp = re.compile(r"^шпионлокации(?: ([\w ]+))?", re.IGNORECASE)
 
-admin_ids = [203760080, 357855054, 513143028, 526421484]  # я, Лиза, Лёня, Антон
+admin_ids = list(map(int, os.environ['admin_ids'].split()))
 players_list = []  # TODO: позволить игру из разных бесед
 current_game = False
 all_players = False
