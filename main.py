@@ -107,7 +107,7 @@ async def help_handler(message: MessageMin):
     return HELP_MESSAGE
 
 
-@bot.on.message(text=["шпионлокации <location>", "шпионлокации"])
+@bot.on.chat_message(text=["шпионлокации <location>", "шпионлокации"])
 async def location_handler(message: MessageMin, location: Optional[str] = None):
     logger.debug('Получена комманда на локации')
     if location is not None:
