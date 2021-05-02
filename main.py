@@ -95,7 +95,7 @@ async def stop_handler(message: MessageMin):
         if no_spy:
             return GAME_STOPPED
         spy_ping = await get_user_ping(spy)
-        result_string = f"{GAME_STOPPED}\nШпионом был(а) {spy_ping}\nЛокацией была {current_location}"
+        result_string = f"{GAME_STOPPED}\nШпионом был(а) {spy_ping}\nЛокация - {current_location}"
         spy = 0
         current_location = ''
         return {"message": result_string, "disable_mentions": True}
