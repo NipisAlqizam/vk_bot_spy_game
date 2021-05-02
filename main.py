@@ -9,7 +9,7 @@ from vkbottle.bot import Bot, MessageMin
 import locations
 from strings import GAME_STOPPED, NO_CURRENT_GAME, RECRUITMENT_STARTED, GAME_STARTED, GAME_ALREADY_STARTED, \
     ERROR_NO_RIGHTS, ALREADY_PLAYING, ERROR_MESSAGES_FORBIDDEN, ALREADY_ALL_PLAYERS, HELP_MESSAGE, \
-    LOCATIONS_UPDATED, NOT_ENOUGH_PLAYERS, PLAYING_NOW
+    LOCATIONS_UPDATED, NOT_ENOUGH_PLAYERS, PLAYING_NOW, GAME_RULES
 
 locations_command_regexp = re.compile(r"^шпионлокации(?: ([\w ]+))?", re.IGNORECASE)
 
@@ -135,6 +135,11 @@ async def people_handler(message: MessageMin, match: list[str]):
         return NO_CURRENT_GAME
     people = [await get_user_ping(user) for user in players_list]
     await message.answer("{}\n{}".format(PLAYING_NOW, "\n".join(people)), disable_mentions=True)
+
+
+@bot.on.message(regexp=r"(?i)^шпионправила")
+async def rules_handler(message: MessageMin, match: list[str]):
+    return GAME_RULES
 
 
 async def assign_roles():
