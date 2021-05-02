@@ -52,7 +52,7 @@ async def join_handler(message: MessageMin):
             "conversation_message_ids": [message.conversation_message_id],
             "peer_id": message.peer_id,
             "is_reply": True})
-        await message.answer(f"{username}, тебя добавили", forward=forward)
+        await message.answer(f"{username}, тебя добавили", forward=forward, disable_mentions=True)
         return
     return NO_CURRENT_GAME
 
@@ -98,7 +98,7 @@ async def stop_handler(message: MessageMin):
         result_string = f"{GAME_STOPPED}\nШпионом был(а) {spy_ping}\nЛокацией была {current_location}"
         spy = 0
         current_location = ''
-        return result_string
+        return {"message": result_string, "disable_mentions": True}
     return NO_CURRENT_GAME
 
 
