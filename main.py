@@ -5,13 +5,12 @@ import re
 
 from loguru import logger
 from vkbottle.bot import Bot, MessageMin
+from typing import Optional
 
 import locations
 from strings import GAME_STOPPED, NO_CURRENT_GAME, RECRUITMENT_STARTED, GAME_STARTED, GAME_ALREADY_STARTED, \
     ERROR_NO_RIGHTS, ALREADY_PLAYING, ERROR_MESSAGES_FORBIDDEN, ALREADY_ALL_PLAYERS, HELP_MESSAGE, \
     LOCATIONS_UPDATED, NOT_ENOUGH_PLAYERS, PLAYING_NOW, GAME_RULES
-
-locations_command_regexp = re.compile(r"^шпионлокации(?: ([\w ]+))?", re.IGNORECASE)
 
 admin_ids = list(map(int, os.environ['admin_ids'].split()))
 players_list = []  # TODO: позволить игру из разных бесед
@@ -22,6 +21,7 @@ current_location = ''
 
 bot = Bot(os.environ["token"])
 
+bot.labeler.vbml_ignore_case = True
 
 async def send_pm(to_id: int, message: str):
     print(to_id, message)
@@ -36,7 +36,7 @@ async def get_user_ping(user_id: int) -> str:
     return f"@{user_nickname} ({user_info.first_name} {user_info.last_name})"
 
 
-@bot.on.chat_message(func=lambda m: "шпионвойти" == m.text.lower())
+@bot.on.chat_message(text="шпионвойти")
 async def join_handler(message: MessageMin):
     logger.debug(f'Происходит попытка входа в игру игрока {message.from_id}')
     if current_game and all_players:
@@ -57,7 +57,7 @@ async def join_handler(message: MessageMin):
     return NO_CURRENT_GAME
 
 
-@bot.on.chat_message(func=lambda m: "шпионстарт" == m.text.lower())
+@bot.on.chat_message(text="шпионстарт")
 async def start_handler(message: MessageMin):
     logger.debug('Происходит попытка запуска игры')
     if message.from_id not in admin_ids:
@@ -79,7 +79,7 @@ async def start_handler(message: MessageMin):
     return RECRUITMENT_STARTED
 
 
-@bot.on.chat_message(func=lambda m: "шпионстоп" == m.text.lower())
+@bot.on.chat_message(text="шпионстоп")
 async def stop_handler(message: MessageMin):
     logger.debug('Происходит попытка остановки игры')
     if message.from_id not in admin_ids:
@@ -102,19 +102,19 @@ async def stop_handler(message: MessageMin):
     return NO_CURRENT_GAME
 
 
-@bot.on.message(func=lambda m: "шпионкоманды" == m.text.lower())
+@bot.on.message(text="шпионкоманды")
 async def help_handler(message: MessageMin):
     return HELP_MESSAGE
 
 
-@bot.on.chat_message(regexp=locations_command_regexp)
-async def location_handler(message: MessageMin, match: list[str]):
+@bot.on.message(text=["шпионлокации <location>", "шпионлокации"])
+async def location_handler(message: MessageMin, location: Optional[str] = None):
     logger.debug('Получена комманда на локации')
-    if match[0] is not None:
+    if location is not None:
         if message.from_id not in admin_ids:
             return ERROR_NO_RIGHTS
-        logger.debug(f'Происходит добавление локации {match[0]}')
-        locations.add_location(match[0])
+        logger.debug(f'Происходит добавление локации {location}')
+        locations.add_location(location)
     return 'Текущие локации:\n' + '\n'.join(locations.locations)
 
 
@@ -129,7 +129,7 @@ async def location_update_handler(message: MessageMin, match: list[str]):
     return LOCATIONS_UPDATED + "\n".join(locations.locations)
 
 
-@bot.on.chat_message(regexp=r"(?i)^шпионучастники")
+@bot.on.chat_message(text="шпионучастники")
 async def people_handler(message: MessageMin, match: list[str]):
     if not current_game:
         return NO_CURRENT_GAME
@@ -137,8 +137,8 @@ async def people_handler(message: MessageMin, match: list[str]):
     await message.answer("{}\n{}".format(PLAYING_NOW, "\n".join(people)), disable_mentions=True)
 
 
-@bot.on.message(regexp=r"(?i)^шпионправила")
-async def rules_handler(message: MessageMin, match: list[str]):
+@bot.on.message(text="шпионправила")
+async def rules_handler(message: MessageMin):
     return GAME_RULES
 
 
