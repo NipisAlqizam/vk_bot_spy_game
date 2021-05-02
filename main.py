@@ -9,7 +9,7 @@ from vkbottle.bot import Bot, MessageMin
 import locations
 from strings import GAME_STOPPED, NO_CURRENT_GAME, RECRUITMENT_STARTED, GAME_STARTED, GAME_ALREADY_STARTED, \
     ERROR_NO_RIGHTS, ALREADY_PLAYING, ERROR_MESSAGES_FORBIDDEN, ALREADY_ALL_PLAYERS, HELP_MESSAGE, \
-    LOCATIONS_UPDATED, NOT_ENOUGH_PLAYERS
+    LOCATIONS_UPDATED, NOT_ENOUGH_PLAYERS, PLAYING_NOW
 
 locations_command_regexp = re.compile(r"^шпионлокации(?: ([\w ]+))?", re.IGNORECASE)
 
@@ -108,7 +108,7 @@ async def help_handler(message: MessageMin):
 
 
 @bot.on.chat_message(regexp=locations_command_regexp)
-async def location_handler(message: MessageMin, match):
+async def location_handler(message: MessageMin, match: list[str]):
     logger.debug('Получена комманда на локации')
     if match[0] is not None:
         if message.from_id not in admin_ids:
@@ -119,7 +119,7 @@ async def location_handler(message: MessageMin, match):
 
 
 @bot.on.chat_message(regexp=r"(?i)^шпионобновить[ \n]*((?:.+\n?)+)")
-async def location_update_handler(message: MessageMin, match):
+async def location_update_handler(message: MessageMin, match: list[str]):
     logger.debug('Попытка обновления локаций')
     if message.from_id not in admin_ids:
         return ERROR_NO_RIGHTS
@@ -127,6 +127,14 @@ async def location_update_handler(message: MessageMin, match):
     new_locations = match[0].splitlines()
     locations.update_location_list(new_locations)
     return LOCATIONS_UPDATED + "\n".join(locations.locations)
+
+
+@bot.on.chat_message(regexp=r"(?i)^шпионучастники")
+async def people_handler(message: MessageMin, match: list[str]):
+    if not current_game:
+        return NO_CURRENT_GAME
+    people = [await get_user_ping(user) for user in players_list]
+    await message.answer("{}\n{}".format(PLAYING_NOW, "\n".join(people)), disable_mentions=True)
 
 
 async def assign_roles():
