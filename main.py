@@ -160,4 +160,5 @@ async def check_pm(user_id: int) -> bool:
     return can_write
 
 
-bot.run_forever()
+if __name__ == "__main__":
+    bot.run_forever()
